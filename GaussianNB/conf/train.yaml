@@ -1,0 +1,36 @@
+defaults:
+  - protocols: default
+  - _self_
+  - override hydra/job_logging: disabled
+
+data:
+  path: kcb_202306_202405_undersampled_1to4.csv
+  chunk_rows: 20000
+
+output:
+  base_dir: GaussianNB/outputs
+
+model:
+  var_smoothing_candidates: [1.0e-9, 1.0e-7, 1.0e-5]
+  decision_threshold: 0.5
+
+training:
+  batch_rows: 2000 # About 67 v1 and 61 v2 updates on the current CSV.
+  tuning_holdout_months: 1
+
+runtime:
+  models: [v1, v2]
+  parallel_models: true
+  live_plot: auto # auto, on, or off
+  plot_every: 1 # Completed training batches between live-plot updates.
+
+checkpoint:
+  every: 5 # About 10000 newly processed rows between checkpoints.
+  resume_from: null # A saved checkpoint directory; select one model when resuming.
+
+hydra:
+  run:
+    dir: .
+  output_subdir: null
+  job:
+    chdir: false

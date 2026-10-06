@@ -1,0 +1,16 @@
+{
+  "model": "/home/cjw031530/1/higher-analysis/GaussianNB/outputs/run_20261006_173923/v1_model.pkl",
+  "source": "/home/cjw031530/1/higher-analysis/kcb_202306_202405_undersampled_1to4.csv",
+  "model_experiment": "v1",
+  "validation_protocol": "v1",
+  "validation_months": [
+    202404,
+    202405
+  ],
+  "validation_month_shares": null,
+  "classification_threshold": 0.5,
+  "primary_metric": "misclassification_rate",
+  "primary_scope": "overall_unweighted",
+  "primary_score": 0.22183479200808953,
+  "primary_loss": 0.22183479200808953
+}
