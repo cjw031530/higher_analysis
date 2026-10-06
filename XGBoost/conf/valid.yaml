@@ -1,0 +1,29 @@
+defaults:
+  - protocols: default
+  - _self_
+  - override hydra/job_logging: disabled
+
+model:
+  path: null # Required: path to v1_model.json or v2_model.json.
+  settings_path: null
+  history_path: null
+
+data:
+  path: null # Defaults to the CSV recorded during training.
+  chunk_rows: 20000
+
+validation:
+  protocol: native # native, v1, or v2; v2 model with v1 tests the same later months.
+
+output:
+  base_dir: null # Defaults to a validation directory beside the model.
+
+runtime:
+  n_jobs: 0 # 0 uses all available CPUs for prediction.
+
+hydra:
+  run:
+    dir: .
+  output_subdir: null
+  job:
+    chdir: false

@@ -1,23 +1,15 @@
 # Project State
 
-## Current status
+The project predicts the binary `TARGET` in
+`kcb_202306_202405_undersampled_1to4.csv` from every other column, including
+`LNMON`. The root CSV is read-only. The EDA notebook describes the data.
 
-The repository contains the read-only KCB monthly CSV and its completed EDA
-notebook. The first predictive baseline is implemented in `XGBoost/`. It defines
-two chronological training and validation configurations and writes models,
-probabilities, metrics, and version information to a new ignored run directory.
+The implemented model family is XGBoost, with two chronological training and
+validation variants. Training, checkpoint continuation, and saved-model
+validation are implemented in `XGBoost/`. Configuration lives in
+`XGBoost/conf/`; dependencies live in `XGBoost/requirements.txt`.
 
-No independent test data is available. Full-data training has not been run as
-part of the initial implementation. A 384-row, 12-month smoke test completed
-both models using eight trees each. It verified validation row counts, exact
-60/30/10 month weight sums, model reload and prediction agreement, and unseen
-validation category handling. Runtime dependencies were installed in the
-workspace Python environment; the declared dependencies are in
-`XGBoost/requirements.txt`.
-
-## Data and EDA findings
-
-The CSV contains 162,355 rows from 202306 through 202405, 560 columns total,
-and 558 non-time feature columns. Four of those features are text categories.
-The original data and EDA export CSV files at the project root are not edited
-by the model workflow.
+The primary validation score is misclassification rate at a 0.5 probability
+cutoff. Version 2 applies 60%/30%/10% weights to its validation months.
+Small-data and checkpoint tests have passed, but the full CSV has not been
+trained in this workspace. There is no independent test set.

@@ -1,0 +1,42 @@
+defaults:
+  - protocols: default
+  - _self_
+  - override hydra/job_logging: disabled
+
+data:
+  path: kcb_202306_202405_undersampled_1to4.csv
+  chunk_rows: 20000
+
+output:
+  base_dir: XGBoost/outputs
+
+model:
+  tree_method: hist
+  enable_categorical: true
+  n_estimators: 3000
+  max_depth: 5
+  learning_rate: 0.04
+  min_child_weight: 10
+  subsample: 0.8
+  colsample_bytree: 0.8
+  objective: binary:logistic
+  eval_metric: error
+  random_state: 42
+
+runtime:
+  models: [v1, v2]
+  parallel_models: true
+  jobs_per_model: 0 # 0 assigns half of the available CPUs to each model.
+  live_plot: auto # auto, on, or off
+  plot_every: 25
+
+checkpoint:
+  every: 100 # Boosting iterations between checkpoints.
+  resume_from: null # Set to a checkpoint directory to continue its model.
+
+hydra:
+  run:
+    dir: .
+  output_subdir: null
+  job:
+    chdir: false

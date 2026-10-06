@@ -1,33 +1,34 @@
 # Architecture
 
-## Inputs and workflow
+## Data and validation protocols
 
-`XGBoost.train` reads the root CSV without modifying it. It validates the
-monthly and binary target columns, then uses every column except `TARGET` as an
-input. `LNMON` stays in the input matrix as requested. The four text columns
-identified by the EDA are inferred from data types and converted to pandas
-categories using training-only vocabularies; unseen validation values become
-missing values. XGBoost handles numerical and categorical missing values.
+`XGBoost.train` reads the root CSV without modifying it. Every column except
+`TARGET` is a predictor. Text predictors use categories learned from training
+rows; unseen validation categories become missing values.
 
-The module trains two `XGBClassifier` instances. Version 1 uses 202306–202403
-for training and 202404–202405 for validation. Version 2 uses 202306–202402 for
-training and 202403–202405 for validation. Version 2's validation row weight is
-the desired month share divided by its row count, yielding exact total month
-shares of 0.6, 0.3, and 0.1. No validation weight affects fitting.
+| Model | Training months | Validation months | Validation weights |
+| --- | --- | --- | --- |
+| v1 | 202306–202403 | 202404–202405 | Equal per row |
+| v2 | 202306–202402 | 202403–202405 | 60% / 30% / 10% by month |
 
-The two models run in a thread pool. Each XGBoost instance uses compiled
-histogram training with a configurable number of CPU threads, half the detected
-CPU count by default. A tqdm callback reports boosting iterations; another
-bar reports rows read. Sequential mode is available to lower peak memory.
+The month weights affect validation scores, not model fitting. No independent
+test period is available.
 
-## Outputs
+## XGBoost workflow
 
-Each invocation creates a unique directory under `XGBoost/outputs/`. JSON
-models retain categorical split information. Prediction CSV files include the
-source row index, month, target, probability, and validation weight. Metric
-JSON files include overall and monthly ROC AUC, average precision, and log loss;
-version 2 also includes weighted overall metrics. `run.json` records versions,
-schema, data path and size, and runtime settings.
+Hydra YAML in `XGBoost/conf/` defines paths, hyperparameters, runtime settings,
+and validation protocols. `XGBoost.train` can fit both variants concurrently,
+shows tqdm progress, records validation error after every tree, and writes
+periodic resumable checkpoints. Final JSON models, settings, and error histories
+are stored under `XGBoost/outputs/`.
 
-Outputs are ignored by Git. There is no independent test evaluation, early
-stopping, calibration, or threshold selection in this first baseline.
+The current model uses histogram trees, native categorical support, and 3,000
+trees. Its fit objective is `binary:logistic`; `eval_metric=error` monitors
+misclassification at probability > 0.5. Monitoring error does not change the
+fitted trees because there is no early stopping.
+
+`XGBoost.valid` loads a final model and produces prediction rows, metric tables,
+plots, and an HTML report. Its primary score is misclassification rate; v2's
+native score uses the month weights above. It can also evaluate a v2 model on
+v1's unweighted validation months for a same-period comparison. Older final
+models with log-loss histories remain validatable.

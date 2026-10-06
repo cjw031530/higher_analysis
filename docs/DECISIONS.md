@@ -1,23 +1,16 @@
 # Decisions
 
-## 2026-10-06: Chronological baseline and validation weighting
-
-Use the exact two requested month splits. Keep `LNMON` as a predictor because
-the input is explicitly defined as every non-target column. Apply version 2's
-60/30/10 weights to validation only, normalizing by the number of rows in each
-month so row count does not change the intended month shares.
-
-## 2026-10-06: Initial model and categories
-
-Use XGBoost's histogram tree method and native categorical support with the
-requested 1,600-tree hyperparameters. Preserve all predictors for the initial
-baseline, including sparse and constant columns. Derive each model's category
-vocabulary only from its training period and serialize models as JSON.
-
-## 2026-10-06: Execution and dependencies
-
-Run the two models concurrently with a separate CPU thread budget per model.
-Use tqdm to expose data loading and training progress. Keep dependency
-declarations in `XGBoost/requirements.txt`; the root requirements file and
-root data artifacts are not changed. Use XGBoost 3.2 or newer for pandas 3
-compatibility and categorical support, together with scikit-learn for metrics.
+- Use chronological validation: v1 trains through 202403 and validates on
+  202404–202405; v2 trains through 202402 and validates on 202403–202405.
+  Normalize v2 row weights so those three months contribute 60%, 30%, and 10%
+  to validation metrics.
+- Keep `LNMON` and every other non-target column as input. Learn categorical
+  vocabularies from training rows only, and preserve the root CSV unchanged.
+- Keep `binary:logistic` for fitting because raw misclassification loss is not
+  differentiable. Use XGBoost `error` for the training curve and report
+  misclassification rate at probability > 0.5 as the final validation score.
+- Store configuration in Hydra YAML, dependencies in
+  `XGBoost/requirements.txt`, portable final models as JSON, and resumable
+  same-version checkpoints separately. The current error-history workflow is
+  version 3.1.0; earlier log-loss checkpoints cannot resume under it, but
+  their final models can still be validated.
