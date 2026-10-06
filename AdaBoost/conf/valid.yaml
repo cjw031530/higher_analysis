@@ -1,0 +1,29 @@
+defaults:
+  - protocols: default
+  - _self_
+  - override hydra/job_logging: disabled
+
+model:
+  path: null # Required: path to v1_model.pkl or v2_model.pkl.
+  settings_path: null
+  history_path: null
+
+data:
+  path: null # Defaults to the training source recorded in settings.
+  chunk_rows: 20000
+
+validation:
+  protocol: native # native or a protocol name such as v1.
+
+output:
+  base_dir: null # Defaults to a validation directory beside the model.
+
+runtime:
+  prediction_workers: 2
+
+hydra:
+  run:
+    dir: .
+  output_subdir: null
+  job:
+    chdir: false

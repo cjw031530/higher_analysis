@@ -1,0 +1,34 @@
+defaults:
+  - protocols: default
+  - _self_
+  - override hydra/job_logging: disabled
+
+data:
+  path: kcb_202306_202405_undersampled_1to4.csv
+  chunk_rows: 20000
+
+output:
+  base_dir: AdaBoost/outputs
+
+model:
+  max_depth: 3
+  n_estimators: 300
+  learning_rate: 0.05
+  random_state: 42
+
+runtime:
+  models: [v1, v2]
+  parallel_models: true
+  live_plot: auto # auto, on, or off
+  plot_every: 10
+
+checkpoint:
+  every: 50
+  resume_from: null # Directory containing state.json, history.csv, and snapshot.pkl.
+
+hydra:
+  run:
+    dir: .
+  output_subdir: null
+  job:
+    chdir: false

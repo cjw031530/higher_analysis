@@ -1,0 +1,3 @@
+evaluation,protocol,months,month_weighted,metric,score
+training_protocol,v2,"202403,202404,202405",True,logloss,0.3986658804593173
+selected_protocol,v1,"202404,202405",False,logloss,0.42692849040031433

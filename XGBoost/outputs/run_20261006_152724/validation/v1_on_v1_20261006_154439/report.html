@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>v1 model on v1 validation</title>
+<style>
+body { font-family: system-ui, sans-serif; max-width: 1100px; margin: 2rem auto; padding: 0 1rem; color: #17202a; }
+section { margin: 2rem 0; }
+img { max-width: 100%; height: auto; border: 1px solid #d8dee5; }
+table { border-collapse: collapse; width: 100%; display: block; overflow-x: auto; }
+th, td { padding: 0.45rem 0.7rem; border-bottom: 1px solid #d8dee5; text-align: right; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+</style>
+</head>
+<body>
+<h1>v1 model on v1 validation</h1>
+<p><strong>Final validation misclassification rate (overall_unweighted, probability &gt; 0.5): 0.178981</strong></p>
+<p>Validation months: 202404, 202405.
+The training-history figure reflects the model's original training validation protocol.
+The results describe the supplied undersampled data and are not independent test scores.</p>
+<section><h2>Overall and monthly metrics</h2><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>scope</th>
+      <th>month</th>
+      <th>rows</th>
+      <th>target_1_rows</th>
+      <th>target_1_rate</th>
+      <th>misclassification_rate</th>
+      <th>roc_auc</th>
+      <th>average_precision</th>
+      <th>log_loss</th>
+      <th>brier_score</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>overall_unweighted</td>
+      <td>all</td>
+      <td>28679</td>
+      <td>6470</td>
+      <td>0.22560</td>
+      <td>0.17898</td>
+      <td>0.81600</td>
+      <td>0.62052</td>
+      <td>0.40952</td>
+      <td>0.12933</td>
+    </tr>
+    <tr>
+      <td>monthly_unweighted</td>
+      <td>202404</td>
+      <td>13966</td>
+      <td>2989</td>
+      <td>0.21402</td>
+      <td>0.16798</td>
+      <td>0.81851</td>
+      <td>0.61449</td>
+      <td>0.39419</td>
+      <td>0.12343</td>
+    </tr>
+    <tr>
+      <td>monthly_unweighted</td>
+      <td>202405</td>
+      <td>14713</td>
+      <td>3481</td>
+      <td>0.23659</td>
+      <td>0.18942</td>
+      <td>0.81365</td>
+      <td>0.62647</td>
+      <td>0.42407</td>
+      <td>0.13494</td>
+    </tr>
+  </tbody>
+</table></section>
+<section><h2>Same-model protocol comparison</h2><p>The first row is the metric recorded during training;
+the second row scores the selected validation protocol with the same metric.</p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>evaluation</th>
+      <th>protocol</th>
+      <th>months</th>
+      <th>month_weighted</th>
+      <th>metric</th>
+      <th>score</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>training_protocol</td>
+      <td>v1</td>
+      <td>202404,202405</td>
+      <td>False</td>
+      <td>logloss</td>
+      <td>0.40952</td>
+    </tr>
+    <tr>
+      <td>selected_protocol</td>
+      <td>v1</td>
+      <td>202404,202405</td>
+      <td>False</td>
+      <td>logloss</td>
+      <td>0.40952</td>
+    </tr>
+  </tbody>
+</table></section>
+<section><h2>Training history</h2><img src="training_curve.png" alt="Training history"></section>
+<section><h2>ROC and precision-recall</h2><img src="roc_pr_curves.png" alt="ROC and precision-recall"></section>
+<section><h2>Calibration</h2><img src="calibration.png" alt="Calibration"></section>
+<section><h2>Monthly metrics</h2><img src="monthly_metrics.png" alt="Monthly metrics"></section>
+<section><h2>Score distribution</h2><img src="score_distribution.png" alt="Score distribution"></section>
+<section><h2>Calibration deciles</h2><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>decile</th>
+      <th>rows</th>
+      <th>weight_sum</th>
+      <th>mean_probability</th>
+      <th>observed_target_rate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>2868</td>
+      <td>2868.00000</td>
+      <td>0.01386</td>
+      <td>0.01674</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>2868</td>
+      <td>2868.00000</td>
+      <td>0.03096</td>
+      <td>0.04812</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>2868</td>
+      <td>2868.00000</td>
+      <td>0.04959</td>
+      <td>0.06416</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>2868</td>
+      <td>2868.00000</td>
+      <td>0.07083</td>
+      <td>0.09798</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>2868</td>
+      <td>2868.00000</td>
+      <td>0.09827</td>
+      <td>0.13598</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>2868</td>
+      <td>2868.00000</td>
+      <td>0.13361</td>
+      <td>0.17503</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>2868</td>
+      <td>2868.00000</td>
+      <td>0.18392</td>
+      <td>0.23152</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>2868</td>
+      <td>2868.00000</td>
+      <td>0.25726</td>
+      <td>0.31904</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>2868</td>
+      <td>2868.00000</td>
+      <td>0.38772</td>
+      <td>0.43410</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>2867</td>
+      <td>2867.00000</td>
+      <td>0.71272</td>
+      <td>0.73352</td>
+    </tr>
+  </tbody>
+</table></section>
+<section><h2>Threshold diagnostics</h2><p>The final classification score uses 0.5; other thresholds are diagnostics only.</p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>threshold</th>
+      <th>weighted_true_positive</th>
+      <th>weighted_false_positive</th>
+      <th>weighted_true_negative</th>
+      <th>weighted_false_negative</th>
+      <th>misclassification_rate</th>
+      <th>precision</th>
+      <th>recall</th>
+      <th>specificity</th>
+      <th>predicted_positive_share</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0.10000</td>
+      <td>5611.00000</td>
+      <td>10005.00000</td>
+      <td>12204.00000</td>
+      <td>859.00000</td>
+      <td>0.37881</td>
+      <td>0.35931</td>
+      <td>0.86723</td>
+      <td>0.54951</td>
+      <td>0.54451</td>
+    </tr>
+    <tr>
+      <td>0.20000</td>
+      <td>4439.00000</td>
+      <td>4816.00000</td>
+      <td>17393.00000</td>
+      <td>2031.00000</td>
+      <td>0.23875</td>
+      <td>0.47963</td>
+      <td>0.68609</td>
+      <td>0.78315</td>
+      <td>0.32271</td>
+    </tr>
+    <tr>
+      <td>0.30000</td>
+      <td>3421.00000</td>
+      <td>2504.00000</td>
+      <td>19705.00000</td>
+      <td>3049.00000</td>
+      <td>0.19363</td>
+      <td>0.57738</td>
+      <td>0.52875</td>
+      <td>0.88725</td>
+      <td>0.20660</td>
+    </tr>
+    <tr>
+      <td>0.40000</td>
+      <td>2667.00000</td>
+      <td>1343.00000</td>
+      <td>20866.00000</td>
+      <td>3803.00000</td>
+      <td>0.17943</td>
+      <td>0.66509</td>
+      <td>0.41221</td>
+      <td>0.93953</td>
+      <td>0.13982</td>
+    </tr>
+    <tr>
+      <td>0.50000</td>
+      <td>2057.00000</td>
+      <td>720.00000</td>
+      <td>21489.00000</td>
+      <td>4413.00000</td>
+      <td>0.17898</td>
+      <td>0.74073</td>
+      <td>0.31793</td>
+      <td>0.96758</td>
+      <td>0.09683</td>
+    </tr>
+    <tr>
+      <td>0.60000</td>
+      <td>1590.00000</td>
+      <td>374.00000</td>
+      <td>21835.00000</td>
+      <td>4880.00000</td>
+      <td>0.18320</td>
+      <td>0.80957</td>
+      <td>0.24575</td>
+      <td>0.98316</td>
+      <td>0.06848</td>
+    </tr>
+    <tr>
+      <td>0.70000</td>
+      <td>1212.00000</td>
+      <td>168.00000</td>
+      <td>22041.00000</td>
+      <td>5258.00000</td>
+      <td>0.18920</td>
+      <td>0.87826</td>
+      <td>0.18733</td>
+      <td>0.99244</td>
+      <td>0.04812</td>
+    </tr>
+    <tr>
+      <td>0.80000</td>
+      <td>861.00000</td>
+      <td>68.00000</td>
+      <td>22141.00000</td>
+      <td>5609.00000</td>
+      <td>0.19795</td>
+      <td>0.92680</td>
+      <td>0.13308</td>
+      <td>0.99694</td>
+      <td>0.03239</td>
+    </tr>
+    <tr>
+      <td>0.90000</td>
+      <td>478.00000</td>
+      <td>23.00000</td>
+      <td>22186.00000</td>
+      <td>5992.00000</td>
+      <td>0.20974</td>
+      <td>0.95409</td>
+      <td>0.07388</td>
+      <td>0.99896</td>
+      <td>0.01747</td>
+    </tr>
+  </tbody>
+</table></section>
+</body>
+</html>
