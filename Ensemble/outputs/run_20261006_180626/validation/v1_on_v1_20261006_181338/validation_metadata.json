@@ -1,0 +1,16 @@
+{
+  "model": "/home/cjw031530/1/higher-analysis/Ensemble/outputs/run_20261006_180626/v1_model",
+  "source": "/home/cjw031530/1/higher-analysis/kcb_202306_202405_undersampled_1to4.csv",
+  "model_experiment": "v1",
+  "validation_protocol": "v1",
+  "validation_months": [
+    202404,
+    202405
+  ],
+  "validation_month_shares": null,
+  "classification_threshold": 0.5,
+  "primary_metric": "misclassification_rate",
+  "primary_scope": "overall_unweighted",
+  "primary_score": 0.18829108406848216,
+  "primary_loss": 0.18829108406848216
+}

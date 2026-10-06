@@ -1,0 +1,32 @@
+defaults:
+  - protocols: default
+  - _self_
+  - override hydra/job_logging: disabled
+
+model:
+  path: null # Required: path to v1_model or v2_model directory.
+  settings_path: null
+  history_path: null
+
+comparison_model:
+  path: null # Optional: another ensemble model evaluated on the same rows.
+
+data:
+  path: null # Defaults to the source CSV recorded during training.
+  chunk_rows: 20000
+
+validation:
+  protocol: native # native, v1, or v2; overlapping train months are rejected.
+
+output:
+  base_dir: null # Defaults to a validation directory beside the model.
+
+runtime:
+  threads_per_member: 0
+
+hydra:
+  run:
+    dir: .
+  output_subdir: null
+  job:
+    chdir: false

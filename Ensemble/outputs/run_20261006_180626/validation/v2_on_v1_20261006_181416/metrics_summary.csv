@@ -1,0 +1,2 @@
+scope,rows,misclassification_rate,always_zero_error,log_loss,brier_score,roc_auc,average_precision
+overall_unweighted,28679,0.19073189441751803,0.2256006136894592,0.4319809019455041,0.137760638538996,0.7923581671743838,0.5822811576643271

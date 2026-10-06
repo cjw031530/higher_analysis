@@ -1,0 +1,58 @@
+defaults:
+  - protocols: default
+  - _self_
+  - override hydra/job_logging: disabled
+
+data:
+  path: kcb_202306_202405_undersampled_1to4.csv
+  chunk_rows: 20000
+
+output:
+  base_dir: Ensemble/outputs
+
+model:
+  max_rounds: 400
+  selection_every: 20
+  decision_threshold: 0.5
+  catboost:
+    depth: 6
+    learning_rate: 0.04
+    l2_leaf_reg: 5.0
+    random_seed: 42
+  lightgbm:
+    learning_rate: 0.04
+    num_leaves: 31
+    min_data_in_leaf: 30
+    feature_fraction: 0.8
+    bagging_fraction: 0.8
+    bagging_freq: 1
+    verbosity: -1
+    seed: 42
+  xgboost:
+    max_depth: 5
+    learning_rate: 0.04
+    min_child_weight: 10
+    subsample: 0.8
+    colsample_bytree: 0.8
+    tree_method: hist
+    random_state: 42
+
+training:
+  inner_holdout_months: 1
+
+runtime:
+  models: [v1, v2]
+  parallel_members: true
+  threads_per_member: 0 # 0 assigns a share of available CPUs to each member.
+  live_plot: auto # auto, on, or off
+
+checkpoint:
+  every: 20 # Boosting rounds between complete three-model checkpoints.
+  resume_from: null # A checkpoint directory; resumes one protocol in a new run.
+
+hydra:
+  run:
+    dir: .
+  output_subdir: null
+  job:
+    chdir: false

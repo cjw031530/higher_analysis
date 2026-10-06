@@ -1,0 +1,209 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>Ensemble validation</title><style>
+body {font-family:system-ui,sans-serif;max-width:1100px;margin:2rem auto;padding:0 1rem}
+table {border-collapse:collapse;display:block;overflow:auto} td,th {padding:.35rem .6rem;border:1px solid #ddd}
+img {max-width:100%;height:auto} section {margin:2rem 0}
+</style></head><body><h1>Ensemble validation</h1>
+<p>Model: /home/cjw031530/1/higher-analysis/Ensemble/outputs/run_20261006_180626/v2_model<br>Training protocol: v2<br>
+Evaluation protocol: v2. No independent test set is available.</p>
+<p><strong>Final validation 0/1 loss / misclassification rate (overall_weighted): 0.178167</strong></p>
+<p>The fixed classification rule is probability &gt; 0.5. Outer validation scores were displayed during training but did not choose hyperparameters, rounds, or checkpoints. Probabilities are scores on an undersampled source dataset.</p>
+<section><h2>Overall metrics</h2><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>scope</th>
+      <th>rows</th>
+      <th>misclassification_rate</th>
+      <th>always_zero_error</th>
+      <th>log_loss</th>
+      <th>brier_score</th>
+      <th>roc_auc</th>
+      <th>average_precision</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>overall_unweighted</td>
+      <td>41772</td>
+      <td>0.185148</td>
+      <td>0.219597</td>
+      <td>0.422900</td>
+      <td>0.134284</td>
+      <td>0.794486</td>
+      <td>0.578386</td>
+    </tr>
+    <tr>
+      <td>overall_weighted</td>
+      <td>41772</td>
+      <td>0.178167</td>
+      <td>0.211733</td>
+      <td>0.411788</td>
+      <td>0.129995</td>
+      <td>0.796784</td>
+      <td>0.572665</td>
+    </tr>
+    <tr>
+      <td>common_v1_unweighted</td>
+      <td>28679</td>
+      <td>0.190732</td>
+      <td>0.225601</td>
+      <td>0.431981</td>
+      <td>0.137761</td>
+      <td>0.792358</td>
+      <td>0.582281</td>
+    </tr>
+  </tbody>
+</table></section>
+<section><h2>Monthly metrics</h2><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>month</th>
+      <th>rows</th>
+      <th>misclassification_rate</th>
+      <th>always_zero_error</th>
+      <th>log_loss</th>
+      <th>brier_score</th>
+      <th>roc_auc</th>
+      <th>average_precision</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>202403</td>
+      <td>13093</td>
+      <td>0.172917</td>
+      <td>0.206446</td>
+      <td>0.403008</td>
+      <td>0.126667</td>
+      <td>0.800073</td>
+      <td>0.571488</td>
+    </tr>
+    <tr>
+      <td>202404</td>
+      <td>13966</td>
+      <td>0.181584</td>
+      <td>0.214020</td>
+      <td>0.418284</td>
+      <td>0.132351</td>
+      <td>0.792627</td>
+      <td>0.569007</td>
+    </tr>
+    <tr>
+      <td>202405</td>
+      <td>14713</td>
+      <td>0.199415</td>
+      <td>0.236593</td>
+      <td>0.444982</td>
+      <td>0.142896</td>
+      <td>0.791892</td>
+      <td>0.594368</td>
+    </tr>
+  </tbody>
+</table></section>
+<section><h2>Ensemble and member comparison</h2><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>rows</th>
+      <th>misclassification_rate</th>
+      <th>always_zero_error</th>
+      <th>log_loss</th>
+      <th>brier_score</th>
+      <th>roc_auc</th>
+      <th>average_precision</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ensemble</td>
+      <td>41772</td>
+      <td>0.178167</td>
+      <td>0.211733</td>
+      <td>0.411788</td>
+      <td>0.129995</td>
+      <td>0.796784</td>
+      <td>0.572665</td>
+    </tr>
+    <tr>
+      <td>catboost</td>
+      <td>41772</td>
+      <td>0.181471</td>
+      <td>0.211733</td>
+      <td>0.421351</td>
+      <td>0.133308</td>
+      <td>0.784124</td>
+      <td>0.552855</td>
+    </tr>
+    <tr>
+      <td>lightgbm</td>
+      <td>41772</td>
+      <td>0.175259</td>
+      <td>0.211733</td>
+      <td>0.407426</td>
+      <td>0.128407</td>
+      <td>0.801296</td>
+      <td>0.579712</td>
+    </tr>
+    <tr>
+      <td>xgboost</td>
+      <td>41772</td>
+      <td>0.177401</td>
+      <td>0.211733</td>
+      <td>0.412670</td>
+      <td>0.130260</td>
+      <td>0.794593</td>
+      <td>0.569212</td>
+    </tr>
+    <tr>
+      <td>always_zero</td>
+      <td>41772</td>
+      <td>0.211733</td>
+      <td>0.211733</td>
+      <td>7.631631</td>
+      <td>0.211733</td>
+      <td>0.500000</td>
+      <td>0.211733</td>
+    </tr>
+  </tbody>
+</table></section>
+<section><h2>Confusion matrix</h2><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>actual</th>
+      <th>predicted</th>
+      <th>rows</th>
+      <th>weighted_mass</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0</td>
+      <td>32095</td>
+      <td>0.775520</td>
+    </tr>
+    <tr>
+      <td>0</td>
+      <td>1</td>
+      <td>504</td>
+      <td>0.012747</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0</td>
+      <td>7230</td>
+      <td>0.165420</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>1</td>
+      <td>1943</td>
+      <td>0.046313</td>
+    </tr>
+  </tbody>
+</table></section><section><img src="training_curve.png" alt="training curve"></section>
+<section><img src="monthly_metrics.png" alt="monthly metrics"></section>
+<section><img src="roc_pr.png" alt="roc pr"></section>
+<section><img src="calibration.png" alt="calibration"></section>
+<section><img src="score_distribution.png" alt="score distribution"></section>
+<section><img src="confusion_matrix.png" alt="confusion matrix"></section></body></html>
