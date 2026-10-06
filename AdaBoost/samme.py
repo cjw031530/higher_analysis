@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
 
-from . import WORKFLOW_VERSION
+from . import COMPATIBLE_WORKFLOW_VERSIONS
 
 
 def tree_predict(tree: DecisionTreeClassifier, features: np.ndarray) -> np.ndarray:
@@ -170,7 +170,7 @@ def save_checkpoint(root: Path, snapshot: TrainingSnapshot, settings: dict) -> P
 def load_checkpoint(path: Path) -> tuple[dict, TrainingSnapshot]:
     directory = path if path.is_dir() else path.parent
     state = json.loads((directory / "state.json").read_text(encoding="utf-8"))
-    if state.get("workflow_version") != WORKFLOW_VERSION:
+    if state.get("workflow_version") not in COMPATIBLE_WORKFLOW_VERSIONS:
         raise ValueError("The checkpoint workflow version differs from this implementation.")
     with (directory / "snapshot.pkl").open("rb") as handle:
         snapshot = pickle.load(handle)

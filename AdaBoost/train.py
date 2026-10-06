@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import json
-import multiprocessing as mp
 import os
 import tempfile
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
 from pathlib import Path
-from queue import Empty
+from queue import Empty, Queue
+from threading import Event
 
 import hydra
 import matplotlib
@@ -77,9 +77,15 @@ class LiveValidationPlot:
             self.plt.pause(0.001)
 
 
+def available_logical_cpus() -> int:
+    """Use the CPUs available to this process, including affinity limits."""
+
+    return len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else (os.cpu_count() or 1)
+
+
 def _check_resume(state: dict, settings: dict) -> None:
     comparable = (
-        "experiment", "workflow_version", "source", "source_bytes", "source_sha256",
+        "experiment", "source", "source_bytes", "source_sha256",
         "train_months", "validation_months", "validation_month_shares", "train_rows",
         "validation_rows", "schema", "hyperparameters", "history_metric",
         "classification_threshold", "final_model_selection",
@@ -87,6 +93,8 @@ def _check_resume(state: dict, settings: dict) -> None:
     for key in comparable:
         if state.get(key) != json.loads(json.dumps(settings[key])):
             raise ValueError(f"Checkpoint setting differs from this run: {key}")
+    if state.get("workflow_version") not in ("1.0.0", WORKFLOW_VERSION):
+        raise ValueError("Checkpoint workflow version is incompatible.")
     if state["versions"]["scikit_learn"] != sklearn.__version__:
         raise ValueError("Resume requires the scikit-learn version used for the checkpoint.")
 
@@ -99,10 +107,11 @@ def train_experiment_worker(
     settings: dict,
     run_dir: Path,
     checkpoint_every: int,
-    event_queue,
+    event_queue: Queue,
     resume_path: Path | None,
+    stop_event: Event,
 ) -> dict:
-    """Fit one model in a separate process from the read-only encoded matrix."""
+    """Fit one model in a thread from a shared read-only encoded matrix."""
 
     matrix = np.load(matrix_path, mmap_mode="r")
     train_mask = np.isin(months, experiment.train_months)
@@ -121,7 +130,11 @@ def train_experiment_worker(
         if snapshot.sample_weight.shape != (len(y_train),) or snapshot.valid_margin.shape != (len(y_valid),):
             raise ValueError("Checkpoint arrays do not match the current split.")
     checkpoint_root = run_dir / "checkpoints" / experiment.name
-    while snapshot.model.fitted_iterations < snapshot.model.n_estimators and snapshot.stopping_reason is None:
+    while (
+        snapshot.model.fitted_iterations < snapshot.model.n_estimators
+        and snapshot.stopping_reason is None
+        and not stop_event.is_set()
+    ):
         error = boost_one(snapshot, x_train, y_train, x_valid, y_valid, weights)
         if error is None:
             break
@@ -129,6 +142,11 @@ def train_experiment_worker(
         event_queue.put((experiment.name, iteration, error))
         if iteration % checkpoint_every == 0 or iteration == snapshot.model.n_estimators or snapshot.stopping_reason is not None:
             save_checkpoint(checkpoint_root, snapshot, settings)
+    if stop_event.is_set():
+        iteration = snapshot.model.fitted_iterations
+        if iteration and not (checkpoint_root / f"round_{iteration:06d}").exists():
+            save_checkpoint(checkpoint_root, snapshot, settings)
+        return {"experiment": experiment.name, "interrupted": True}
     if snapshot.model.fitted_iterations == 0:
         raise RuntimeError("Training ended without a fitted AdaBoost tree.")
     if snapshot.stopping_reason is not None:
@@ -224,6 +242,8 @@ def run_training(cfg: DictConfig) -> Path:
         raise ValueError("Chunk size, depth, tree count, learning rate, and intervals must be positive.")
     if cfg.runtime.live_plot not in ("auto", "on", "off"):
         raise ValueError("runtime.live_plot must be auto, on, or off.")
+    if int(cfg.runtime.training_threads) < 0:
+        raise ValueError("runtime.training_threads cannot be negative.")
     backend = matplotlib.get_backend().lower()
     interactive = backend not in {"agg", "pdf", "ps", "svg", "template", "cairo"} and "inline" not in backend
     if cfg.runtime.live_plot == "on" and not interactive:
@@ -243,6 +263,10 @@ def run_training(cfg: DictConfig) -> Path:
     if not names or len(set(names)) != len(names) or any(name not in cfg.protocols for name in names):
         raise ValueError("runtime.models must contain distinct configured protocol names.")
     experiments = tuple(experiment_from_config(name, cfg) for name in names)
+    workers = (
+        min(len(experiments), int(cfg.runtime.training_threads) or available_logical_cpus())
+        if bool(cfg.runtime.parallel_models) else 1
+    )
     frame = load_data(source, int(cfg.data.chunk_rows))
     source_hash = file_sha256(source)
     run_dir = create_run_directory(output_base)
@@ -252,34 +276,35 @@ def run_training(cfg: DictConfig) -> Path:
         plot.seed(names[0], resume_history)
     if not show_plot:
         print("Live plotting is unavailable or disabled; valid.py will plot saved history.")
-    # The matrix is written once per protocol and shared read-only by its worker.
-    # A temporary directory ensures these large arrays are absent from final artifacts.
+    # Protocols with the same train-only encoder reuse one read-only matrix.
+    # Temporary matrices are absent from final artifacts after the run ends.
     with tempfile.TemporaryDirectory(prefix=".matrix_", dir=run_dir) as temporary:
         matrix_dir = Path(temporary)
         jobs = []
+        matrix_cache: dict[str, Path] = {}
         for experiment in experiments:
             train_mask = frame["LNMON"].isin(experiment.train_months).to_numpy()
             schema = feature_schema(frame, train_mask)
             settings = _settings(experiment, schema, frame, source, source_hash, model_params)
-            matrix_path = matrix_dir / f"{experiment.name}_features.npy"
-            encode_features(frame, schema, output_path=matrix_path, show_progress=True)
+            settings["runtime"] = {"parallel_backend": "threads", "training_threads": workers}
+            schema_key = json.dumps(schema, sort_keys=True, ensure_ascii=False)
+            matrix_path = matrix_cache.get(schema_key)
+            if matrix_path is None:
+                matrix_path = matrix_dir / f"features_{len(matrix_cache):02d}.npy"
+                encode_features(frame, schema, output_path=matrix_path, show_progress=True)
+                matrix_cache[schema_key] = matrix_path
             jobs.append((experiment, matrix_path, settings))
         target = frame["TARGET"].to_numpy(dtype="int8", copy=True)
         months = frame["LNMON"].to_numpy(dtype="int32", copy=True)
         del frame
-        # Limit threaded numerical libraries in spawned workers. The tree fit itself
-        # is sequential; independent protocols run in separate processes.
-        for key in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
-            os.environ[key] = "1"
-        context = mp.get_context("spawn")
-        workers = len(experiments) if bool(cfg.runtime.parallel_models) else 1
-        with context.Manager() as manager, ProcessPoolExecutor(max_workers=workers, mp_context=context) as pool:
-            events = manager.Queue()
+        stop_event = Event()
+        with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="AdaBoost") as pool:
+            events: Queue = Queue()
             futures = [
                 pool.submit(
                     train_experiment_worker,
                     experiment, matrix_path, target, months, settings, run_dir,
-                    int(cfg.checkpoint.every), events, resume_path,
+                    int(cfg.checkpoint.every), events, resume_path, stop_event,
                 )
                 for experiment, matrix_path, settings in jobs
             ]
@@ -293,20 +318,27 @@ def run_training(cfg: DictConfig) -> Path:
                     ))
                     for position, experiment in enumerate(experiments, start=1)
                 }
-                while True:
-                    try:
-                        name, iteration, error = events.get(timeout=0.2)
-                        bar = bars[name]
-                        bar.update(iteration - bar.n)
-                        bar.set_postfix_str(f"valid error={error:.5f}", refresh=False)
-                        if plot is not None and (iteration == 1 or iteration % int(cfg.runtime.plot_every) == 0 or iteration == int(cfg.model.n_estimators)):
-                            plot.update(name, iteration, error)
-                    except Empty:
-                        if plot is not None:
-                            plot.process_events()
-                        if all(future.done() for future in futures):
+                try:
+                    while True:
+                        try:
+                            name, iteration, error = events.get(timeout=0.2)
+                            bar = bars[name]
+                            bar.update(iteration - bar.n)
+                            bar.set_postfix_str(f"valid error={error:.5f}", refresh=False)
+                            if plot is not None and (iteration == 1 or iteration % int(cfg.runtime.plot_every) == 0 or iteration == int(cfg.model.n_estimators)):
+                                plot.update(name, iteration, error)
+                        except Empty:
+                            if plot is not None:
+                                plot.process_events()
+                        for future in futures:
+                            if future.done() and future.exception() is not None:
+                                raise future.exception()
+                        if all(future.done() for future in futures) and events.empty():
                             break
-                reports = [future.result() for future in futures]
+                    reports = [future.result() for future in futures]
+                except BaseException:
+                    stop_event.set()
+                    raise
     for report in sorted(reports, key=lambda item: item["experiment"]):
         print(
             f"{report['experiment']}: final valid misclassification rate="

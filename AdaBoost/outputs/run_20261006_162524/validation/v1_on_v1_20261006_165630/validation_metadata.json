@@ -1,0 +1,21 @@
+{
+  "model": "/home/cjw031530/1/higher-analysis/AdaBoost/outputs/run_20261006_162524/v1_model.pkl",
+  "data": "/home/cjw031530/1/higher-analysis/kcb_202306_202405_undersampled_1to4.csv",
+  "model_experiment": "v1",
+  "validation_protocol": "v1",
+  "validation_months": [
+    202404,
+    202405
+  ],
+  "validation_month_shares": null,
+  "weighted_diagnostics": false,
+  "classification_threshold": 0.5,
+  "primary_metric": "misclassification_rate",
+  "primary_score": 0.21081627671815614,
+  "unseen_validation_categories_mapped_to_missing": {
+    "SS1200000": 0,
+    "AS1C10148": 0,
+    "TS_VOLATILITY_APS001_FLIPS": 0,
+    "TS_MOMENTUM_APS001_STATE": 0
+  }
+}

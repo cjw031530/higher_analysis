@@ -24,7 +24,7 @@ from sklearn.metrics import (
     roc_curve,
 )
 
-from . import WORKFLOW_VERSION
+from . import COMPATIBLE_WORKFLOW_VERSIONS
 from .data import create_run_directory, encode_features, file_sha256, load_data, validation_weights
 from .samme import load_final_model
 
@@ -37,8 +37,8 @@ def load_settings(model_path: Path, settings_path: Path | None) -> dict:
             model_path.name.replace("_model.pkl", "_hyperparameters.json")
         )
     settings = json.loads(settings_path.read_text(encoding="utf-8"))
-    if settings.get("workflow_version") != WORKFLOW_VERSION:
-        raise ValueError(f"This validator requires AdaBoost workflow {WORKFLOW_VERSION} artifacts.")
+    if settings.get("workflow_version") not in COMPATIBLE_WORKFLOW_VERSIONS:
+        raise ValueError("This validator requires a compatible AdaBoost workflow artifact.")
     if not settings.get("schema", {}).get("feature_columns") or not settings.get("validation_months"):
         raise ValueError("The settings file lacks its feature schema or validation months.")
     return settings

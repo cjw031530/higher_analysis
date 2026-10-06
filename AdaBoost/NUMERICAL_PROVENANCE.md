@@ -33,3 +33,27 @@
   -s AdaBoost/tests -v`. The timing sample used the actual CSV read-only,
   encoded all predictors with `AdaBoost.data.encode_features`, and called
   `AdaBoost.samme.boost_one` three times on the v1 split.
+
+## Workflow version 1.1.0 — 2026-10-06
+
+- Performance-only change: replace independent v1/v2 process workers with
+  threads and reuse one read-only encoded matrix when train-only categorical
+  schemas match. A shared in-process queue reports iteration progress. The
+  SAMME tree fit, sample-weight update, validation error, and final model
+  selection formulas are unchanged. Version 1.0.0 checkpoints and final
+  models remain readable and resumable with the same scikit-learn version.
+- Regression comparison: on the actual CSV, the first v1 and v2 boosting
+  rounds produced identical weighted tree errors and validation errors in
+  sequential and concurrent thread execution. The existing scikit-learn
+  parity and uninterrupted-versus-resumed tests still pass, including a
+  version 1.0.0 checkpoint header in the integration test.
+- Actual-data runtime benchmark: with 162,355 input rows, 571 encoded
+  columns, one depth-3 tree per protocol, and BLAS/OpenMP threads limited to
+  one, sequential v1 plus v2 took 11.154 seconds wall time. Two concurrent
+  threads took 5.954 seconds (1.87x wall-time speedup). Thread CPU times were
+  approximately 5.95 and 5.38 seconds during the 5.95-second concurrent
+  interval, confirming overlap of compiled tree fits. This exercises two
+  logical processors; further parallel work is required to occupy every
+  available logical processor during a single two-protocol run. The user
+  selected retention of the scikit-learn tree learner, so the dominant fit
+  stage intentionally remains limited to two active logical processors.

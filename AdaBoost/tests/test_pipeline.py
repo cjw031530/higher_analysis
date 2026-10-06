@@ -59,6 +59,14 @@ class PipelineTests(unittest.TestCase):
             checkpoint = first_run / "checkpoints" / "v2" / "round_000003"
             self.assertTrue(checkpoint.is_dir())
             self.assertFalse(any(first_run.glob(".matrix_*")))
+            for version in ("v1", "v2"):
+                settings = json.loads((first_run / f"{version}_hyperparameters.json").read_text())
+                self.assertEqual(settings["runtime"], {"parallel_backend": "threads", "training_threads": 2})
+            # Version 1.0.0 checkpoints contain the same numerical SAMME state.
+            state_path = checkpoint / "state.json"
+            old_state = json.loads(state_path.read_text())
+            old_state["workflow_version"] = "1.0.0"
+            state_path.write_text(json.dumps(old_state))
             self.run_module(
                 "AdaBoost.train", f"data.path={source}", f"output.base_dir={output}",
                 "model.n_estimators=6", f"checkpoint.resume_from={checkpoint}",

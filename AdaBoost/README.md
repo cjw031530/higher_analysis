@@ -52,13 +52,23 @@ get a separate indicator. Numeric predictors retain missing values, which
 source CSV, predictor order, category levels, package versions, and numeric
 workflow version are recorded with the model.
 
-The two protocols run in separate processes by default. Their read-only
-float32 feature matrices are temporary memory-mapped files, removed when the
-run finishes. Individual AdaBoost trees are sequential because each depends
-on the previous tree's sample weights. `tqdm` displays the current validation
-error for each protocol. An interactive Matplotlib backend can show both
-curves live; `runtime.live_plot=off` disables the window. `valid.py` generates
-the saved training plot from the recorded history.
+The two protocols run in concurrent threads by default. Set
+`runtime.training_threads=0` to use one thread per selected protocol, capped
+by the available logical CPUs, or set a positive limit. Set
+`runtime.parallel_models=false` to run the protocols one at a time. Matching
+train-only encoders share one read-only float32 memory-mapped matrix. These
+temporary matrices are removed when the run finishes. Individual AdaBoost
+trees are sequential because each depends on the previous tree's sample
+weights. The scikit-learn tree fit uses one logical processor at a time, so
+the two concurrent protocols use at most two during the dominant fit stage;
+they cannot occupy all 24 without changing the weak learner or algorithm.
+The current setup retains that learner to preserve model behavior.
+`tqdm` displays the current validation error for each protocol.
+An interactive Matplotlib backend can show both curves live;
+`runtime.live_plot=off` disables the window. `valid.py` generates the saved
+training plot from the recorded history. During boosting, pressing Ctrl+C lets
+in-progress tree fits finish, writes a checkpoint after a completed round,
+and exits.
 
 Each run creates a unique `AdaBoost/outputs/run_.../` directory. The three
 final files per protocol are:
@@ -82,7 +92,9 @@ Resume a single protocol into a new run directory:
 ```
 
 Resume checks the source hash, split, feature schema, model hyperparameters,
-workflow version, and scikit-learn version. The earlier run stays intact.
+compatible workflow version, and scikit-learn version. Version 1.0.0
+checkpoints can resume under the thread-based 1.1.0 workflow. The earlier run
+stays intact.
 
 ## Validate a saved model
 

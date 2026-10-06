@@ -1,0 +1,3 @@
+evaluation,protocol,months,month_weighted,metric,score
+training_protocol,v1,"202404,202405",False,misclassification_rate,0.2108162767181561
+selected_protocol,v1,"202404,202405",False,misclassification_rate,0.21081627671815614

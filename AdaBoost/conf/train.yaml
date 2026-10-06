@@ -18,7 +18,8 @@ model:
 
 runtime:
   models: [v1, v2]
-  parallel_models: true
+  parallel_models: true # Fit independent protocols concurrently in threads.
+  training_threads: 0 # 0 uses one thread per selected protocol, capped by CPUs.
   live_plot: auto # auto, on, or off
   plot_every: 10
 
